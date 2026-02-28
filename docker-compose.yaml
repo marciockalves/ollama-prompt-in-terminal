@@ -1,0 +1,43 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./ollama:/root/.ollama
+    pull_policy: always
+    tty: true
+    restart: unless-stopped
+    # Script para iniciar o servidor e garantir que o modelo existe
+    entrypoint: /bin/sh
+    command:
+      - "-c"
+      - |
+        ollama serve &
+        sleep 5
+        ollama pull llama3.1
+        wait
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    volumes:
+      - ./open-webui:/app/backend/data
+    depends_on:
+      - ollama
+    ports:
+      - 3000:8080
+    environment:
+      - 'OLLAMA_BASE_URL=http://ollama:11434'
+      - 'WEBUI_SECRET_KEY=sua_chave_secreta_aqui'
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
