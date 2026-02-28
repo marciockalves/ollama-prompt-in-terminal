@@ -9,15 +9,6 @@ services:
     pull_policy: always
     tty: true
     restart: unless-stopped
-    # Script para iniciar o servidor e garantir que o modelo existe
-    entrypoint: /bin/sh
-    command:
-      - "-c"
-      - |
-        ollama serve &
-        sleep 5
-        ollama pull llama3.1
-        wait
     deploy:
       resources:
         reservations:
@@ -25,7 +16,6 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
-
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
     container_name: open-webui
